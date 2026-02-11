@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edge-llm-workbench"
+version = "0.1.0"
+description = "Production-oriented offline local AI app engineering blueprint (Planner + Tools + Workflow + Local Execution)."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Edge LLM Workbench Contributors" }]
+license = { text = "MIT" }
+keywords = ["edge", "llm", "agent", "workflow", "offline"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "PyYAML>=6.0.1",
+  "jsonschema>=4.21.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.6.0",
+]
+
+[project.scripts]
+edgewb = "edgewb.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

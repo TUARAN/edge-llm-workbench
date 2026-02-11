@@ -1,0 +1,38 @@
+version: 1
+name: text_to_svg
+inputs:
+  prompt_path: ""
+
+input_schema:
+  type: object
+  properties:
+    prompt_path:
+      type: string
+      format: path
+      pattern: ".*\\.txt$"
+      patternMessage:
+        zh-CN: "请输入 .txt 结尾的文件路径"
+        en: "Please provide a .txt file path"
+      description: "文本文件路径（用于渲染 SVG）"
+  required: [prompt_path]
+
+steps:
+  - id: read
+    tool: file.read_text
+    input:
+      path: "{{ inputs.prompt_path }}"
+
+  - id: render
+    tool: viz.render_svg
+    input:
+      text: "{{ steps.read.output.text }}"
+      path: poster.svg
+      width: 1200
+      height: 630
+      font_size: 40
+      bg: "#0b1020"
+      fg: "#e6e6e6"
+
+outputs:
+  svg_path: "{{ steps.render.output.path }}"
+  size: "{{ steps.render.output.width }}x{{ steps.render.output.height }}"

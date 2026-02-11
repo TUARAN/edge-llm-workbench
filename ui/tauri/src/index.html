@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edge LLM Workbench Desktop</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">Edge LLM Workbench</div>
+        <div class="subtitle">Offline • Private • Auditable</div>
+      </header>
+      <main class="content">
+        <section class="panel">
+          <div class="tabs">
+            <button class="tab active" data-tab="overview">Overview</button>
+            <button class="tab" data-tab="workflows">Workflows</button>
+            <button class="tab" data-tab="runs">Runs</button>
+            <button class="tab" data-tab="architecture">Architecture</button>
+          </div>
+          <div class="tab-content" id="overview"></div>
+          <div class="tab-content hidden" id="workflows"></div>
+          <div class="tab-content hidden" id="runs"></div>
+          <div class="tab-content hidden" id="architecture"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

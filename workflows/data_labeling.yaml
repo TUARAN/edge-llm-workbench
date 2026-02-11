@@ -1,0 +1,63 @@
+version: 1
+name: data_labeling
+inputs:
+  csv_path: ""
+  default_label: other
+  focus_labels: []
+
+input_schema:
+  type: object
+  properties:
+    csv_path:
+      type: string
+      format: path
+      pattern: ".*\\.csv$"
+      patternMessage:
+        zh-CN: "请输入 .csv 结尾的文件路径"
+        en: "Please provide a .csv file path"
+      description: "CSV 文件路径（包含 text 列）"
+    default_label:
+      type: string
+      enum: [other, misc, unknown]
+      default: other
+      description: "未命中规则时的默认标签"
+    focus_labels:
+      type: array
+      items:
+        enum: [refund, invoice, login, bug, other]
+      default: []
+      description: "关注的标签（示例：多选）"
+  required: [csv_path]
+
+steps:
+  - id: load
+    tool: file.read_csv
+    input:
+      path: "{{ inputs.csv_path }}"
+
+  - id: label
+    tool: label.apply_rules
+    input:
+      records: "{{ steps.load.output.records }}"
+      field: text
+      default_label: "{{ inputs.default_label }}"
+      rules:
+        - contains: "退款"
+          label: refund
+        - contains: "发票"
+          label: invoice
+        - contains: "无法登录"
+          label: login
+        - contains: "崩溃"
+          label: bug
+
+  - id: save
+    tool: file.write_jsonl
+    input:
+      path: labels.jsonl
+      records: "{{ steps.label.output.records }}"
+
+outputs:
+  labeled_path: "{{ steps.save.output.path }}"
+  label_set: "{{ steps.label.output.labels }}"
+  count: "{{ steps.label.output.count }}"

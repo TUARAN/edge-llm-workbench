@@ -1,0 +1,17 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+out/
+runs/
+ui/tauri/node_modules/
+ui/tauri/dist/
+ui/tauri/src-tauri/target/

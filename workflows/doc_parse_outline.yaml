@@ -1,0 +1,49 @@
+version: 1
+name: doc_parse_outline
+inputs:
+  doc_path: ""
+
+input_schema:
+  type: object
+  properties:
+    doc_path:
+      type: string
+      format: path
+      pattern: ".*\\.md$"
+      patternMessage:
+        zh-CN: "请输入 .md 结尾的文件路径"
+        en: "Please provide a .md file path"
+      description: "Markdown/文本文件路径"
+  required: [doc_path]
+
+steps:
+  - id: read
+    tool: file.read_text
+    input:
+      path: "{{ inputs.doc_path }}"
+
+  - id: outline
+    tool: doc.extract_outline
+    input:
+      text: "{{ steps.read.output.text }}"
+      max_headings: 200
+      max_bullets: 500
+
+  - id: to_json
+    tool: util.to_json
+    input:
+      value: "{{ steps.outline.output }}"
+      indent: 2
+      sort_keys: true
+
+  - id: save
+    tool: file.write_text
+    input:
+      path: outline.json
+      text: "{{ steps.to_json.output.json }}"
+
+outputs:
+  outline_path: "{{ steps.save.output.path }}"
+  headings: "{{ steps.outline.output.headings }}"
+  bullets: "{{ steps.outline.output.bullets }}"
+  word_count: "{{ steps.outline.output.word_count }}"
