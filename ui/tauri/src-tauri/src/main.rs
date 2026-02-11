@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -118,7 +119,39 @@ fn edgewb_bin() -> String {
 
 fn run_edgewb(args: Vec<String>) -> CommandResult {
     let bin = edgewb_bin();
-    let output = Command::new(bin).args(args).output();
+    let cwd = workspace_root();
+
+    let output = Command::new(&bin)
+        .args(args.clone())
+        .current_dir(&cwd)
+        .output();
+
+    let output = match output {
+        Ok(out) => Ok(out),
+        Err(e) if e.kind() == ErrorKind::NotFound => {
+            let py_path = cwd.join("src");
+            let py_output = Command::new("python3")
+                .arg("-m")
+                .arg("edgewb")
+                .args(args.clone())
+                .current_dir(&cwd)
+                .env("PYTHONPATH", py_path.as_os_str())
+                .output();
+            match py_output {
+                Ok(out) => Ok(out),
+                Err(e) if e.kind() == ErrorKind::NotFound => Command::new("python")
+                    .arg("-m")
+                    .arg("edgewb")
+                    .args(args)
+                    .current_dir(&cwd)
+                    .env("PYTHONPATH", py_path.as_os_str())
+                    .output(),
+                Err(e) => Err(e),
+            }
+        }
+        Err(e) => Err(e),
+    };
+
     match output {
         Ok(out) => CommandResult {
             success: out.status.success(),

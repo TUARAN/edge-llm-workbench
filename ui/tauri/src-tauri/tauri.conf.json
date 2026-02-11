@@ -20,5 +20,8 @@
     "security": {
       "csp": null
     }
+  },
+  "plugins": {
+    "dialog": null
   }
 }

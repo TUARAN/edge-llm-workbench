@@ -1,6 +1,191 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 
+type Lang = "zh" | "en";
+
+const translations: Record<Lang, Record<string, string>> = {
+  zh: {
+    app_title: "Edge LLM Workbench 桌面端",
+    app_name: "Edge LLM Workbench",
+    app_subtitle: "离线 • 私有 • 可审计",
+    lang_label: "语言",
+    tab_overview: "概览",
+    tab_workflows: "工作流",
+    tab_runs: "运行记录",
+    tab_architecture: "架构",
+    overview_project_snapshot: "项目概览",
+    overview_version: "版本",
+    overview_workspace: "工作区",
+    overview_workflows: "工作流",
+    overview_runs: "运行",
+    overview_tools: "工具",
+    overview_builtin_tools: "内置工具",
+    common_path: "路径",
+    common_steps: "步骤",
+    common_default: "默认值",
+    workflows_run_workflow: "运行工作流",
+    workflows_workflow: "工作流",
+    workflows_output_dir: "输出目录",
+    workflows_inputs: "输入",
+    workflows_steps_suffix: "{count} 步",
+    workflows_run: "运行",
+    workflows_replay: "回放",
+    workflows_idle: "空闲",
+    workflows_progress: "进度：{done}/{total} {status}",
+    workflows_no_inputs: "未定义输入",
+    workflows_browse: "上传",
+    workflows_running: "运行中...",
+    workflows_replaying: "回放中...",
+    workflows_ok: "成功",
+    workflows_failed: "失败",
+    workflows_status_last: "(最近: {type}{step}{elapsed})",
+    runs_no_runs: "暂无运行记录",
+    runs_no_runs_hint: "运行任意工作流以查看审计日志。",
+    runs_events_timeline: "事件时间线",
+    runs_load_events: "加载事件",
+    runs_search_events: "搜索事件...",
+    runs_all_types: "全部类型",
+    runs_custom: "自定义",
+    runs_export_svg: "导出 SVG",
+    runs_export_png: "导出 PNG",
+    runs_export_report: "导出报告",
+    runs_export: "导出",
+    runs_filter: "运行过滤",
+    runs_filter_placeholder: "按工作流/运行ID过滤",
+    runs_run_id: "运行ID",
+    runs_dir: "目录",
+    runs_replay: "回放",
+    runs_events: "事件",
+    runs_missing: "(缺失)",
+    runs_no_events: "未找到事件。",
+    runs_event_type_counts: "事件类型统计",
+    runs_event_timeline: "事件时间线",
+    runs_step_event_counts: "步骤事件统计",
+    runs_event_stats: "事件统计",
+    runs_events_count: "{count} 个事件",
+    runs_no_step: "(无步骤)",
+    runs_event: "事件",
+    dialog_unavailable: "文件选择仅在桌面端可用。",
+    dialog_failed: "打开文件选择失败：{message}",
+    dialog_opening: "正在打开文件选择...",
+    architecture_layered: "分层架构",
+    architecture_ui: "界面（桌面端）",
+    architecture_app_service: "应用服务",
+    architecture_orchestrator: "编排器",
+    architecture_llm_gateway: "LLM 网关",
+    architecture_tools_runtime: "工具运行时",
+    architecture_local_data: "本地数据",
+    architecture_note: "Planner 负责决策与计划；Tools 负责确定性执行与审计。",
+    architecture_contracts: "执行契约",
+    architecture_contracts_note: "每个 Tool 有严格的 JSON Schema 输入输出，运行事件写入 events.jsonl，可回放。",
+    general_error: "错误：{message}"
+  },
+  en: {
+    app_title: "Edge LLM Workbench Desktop",
+    app_name: "Edge LLM Workbench",
+    app_subtitle: "Offline • Private • Auditable",
+    lang_label: "Language",
+    tab_overview: "Overview",
+    tab_workflows: "Workflows",
+    tab_runs: "Runs",
+    tab_architecture: "Architecture",
+    overview_project_snapshot: "Project Snapshot",
+    overview_version: "Version",
+    overview_workspace: "Workspace",
+    overview_workflows: "Workflows",
+    overview_runs: "Runs",
+    overview_tools: "Tools",
+    overview_builtin_tools: "Builtin Tools",
+    common_path: "Path",
+    common_steps: "Steps",
+    common_default: "default",
+    workflows_run_workflow: "Run Workflow",
+    workflows_workflow: "Workflow",
+    workflows_output_dir: "Output Dir",
+    workflows_inputs: "Inputs",
+    workflows_steps_suffix: "{count} steps",
+    workflows_run: "Run",
+    workflows_replay: "Replay",
+    workflows_idle: "Idle",
+    workflows_progress: "Progress: {done}/{total} {status}",
+    workflows_no_inputs: "No inputs defined",
+    workflows_browse: "Upload",
+    workflows_running: "Running...",
+    workflows_replaying: "Replaying...",
+    workflows_ok: "OK",
+    workflows_failed: "FAILED",
+    workflows_status_last: "(last: {type}{step}{elapsed})",
+    runs_no_runs: "No runs yet",
+    runs_no_runs_hint: "Run any workflow to see audit logs.",
+    runs_events_timeline: "Events Timeline",
+    runs_load_events: "Load Events",
+    runs_search_events: "Search events...",
+    runs_all_types: "All types",
+    runs_custom: "Custom",
+    runs_export_svg: "Export SVG",
+    runs_export_png: "Export PNG",
+    runs_export_report: "Export Report",
+    runs_export: "Export",
+    runs_filter: "Run Filter",
+    runs_filter_placeholder: "Filter by workflow/run id",
+    runs_run_id: "Run ID",
+    runs_dir: "Dir",
+    runs_replay: "Replay",
+    runs_events: "Events",
+    runs_missing: "(missing)",
+    runs_no_events: "No events found.",
+    runs_event_type_counts: "Event Type Counts",
+    runs_event_timeline: "Event Timeline",
+    runs_step_event_counts: "Step Event Counts",
+    runs_event_stats: "Event Stats",
+    runs_events_count: "{count} events",
+    runs_no_step: "(no-step)",
+    runs_event: "event",
+    dialog_unavailable: "File picker is only available in the desktop app.",
+    dialog_failed: "Failed to open file dialog: {message}",
+    dialog_opening: "Opening file dialog...",
+    architecture_layered: "Layered Architecture",
+    architecture_ui: "UI (Desktop)",
+    architecture_app_service: "App Service",
+    architecture_orchestrator: "Orchestrator",
+    architecture_llm_gateway: "LLM Gateway",
+    architecture_tools_runtime: "Tools Runtime",
+    architecture_local_data: "Local Data",
+    architecture_note: "Planner handles planning; Tools handle deterministic execution and audit.",
+    architecture_contracts: "Execution Contracts",
+    architecture_contracts_note: "Each Tool has strict JSON Schema I/O; events are written to events.jsonl for replay.",
+    general_error: "Error: {message}"
+  }
+};
+
+let currentLang: Lang = (localStorage.getItem("edgewb.lang") as Lang) || "zh";
+
+function t(key: string, vars?: Record<string, string | number>) {
+  const table = translations[currentLang] || translations.en;
+  const fallback = translations.en[key] || key;
+  const text = table[key] || fallback;
+  return text.replace(/\{(\w+)\}/g, (_, k) => String(vars?.[k] ?? ""));
+}
+
+function updateStaticText() {
+  document.documentElement.lang = currentLang;
+  document.title = t("app_title");
+  document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    if (key) el.textContent = t(key);
+  });
+  document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (key) el.placeholder = t(key);
+  });
+}
+
+function setLang(lang: Lang) {
+  currentLang = lang;
+  localStorage.setItem("edgewb.lang", lang);
+  updateStaticText();
+}
+
 const tabs = document.querySelectorAll<HTMLButtonElement>(".tab");
 const contents = new Map<string, HTMLElement>();
 ["overview", "workflows", "runs", "architecture"].forEach((id) => {
@@ -8,7 +193,10 @@ const contents = new Map<string, HTMLElement>();
   contents.set(id, el);
 });
 
+let activeTab = "overview";
+
 function setActive(tabId: string) {
+  activeTab = tabId;
   tabs.forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.tab === tabId);
   });
@@ -28,17 +216,17 @@ async function loadOverview() {
   const el = contents.get("overview")!;
   el.innerHTML = `
     <div class="card">
-      <div class="card-title">Project Snapshot</div>
+      <div class="card-title">${t("overview_project_snapshot")}</div>
       <div class="kv">
-        <div>Version</div><div>${data.version}</div>
-        <div>Workspace</div><div>${data.workspace_root}</div>
-        <div>Workflows</div><div>${data.workflow_count}</div>
-        <div>Runs</div><div>${data.run_count}</div>
-        <div>Tools</div><div>${data.tool_count}</div>
+        <div>${t("overview_version")}</div><div>${data.version}</div>
+        <div>${t("overview_workspace")}</div><div>${data.workspace_root}</div>
+        <div>${t("overview_workflows")}</div><div>${data.workflow_count}</div>
+        <div>${t("overview_runs")}</div><div>${data.run_count}</div>
+        <div>${t("overview_tools")}</div><div>${data.tool_count}</div>
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Builtin Tools</div>
+      <div class="card-title">${t("overview_builtin_tools")}</div>
       <div>${data.tools.map((t: string) => `<span class="badge">${t}</span>`).join("")}</div>
     </div>
   `;
@@ -48,28 +236,31 @@ async function loadWorkflows() {
   const list = await invoke<any[]>("list_workflows");
   const el = contents.get("workflows")!;
   const options = list
-    .map((wf) => `<option value="${wf.path}">${wf.name} (${wf.steps} steps)</option>`)
+    .map(
+      (wf) =>
+        `<option value="${wf.path}">${wf.name} (${t("workflows_steps_suffix", { count: wf.steps })})</option>`
+    )
     .join("");
   el.innerHTML = `
     <div class="card">
-      <div class="card-title">Run Workflow</div>
+      <div class="card-title">${t("workflows_run_workflow")}</div>
       <div class="kv">
-        <div>Workflow</div>
+        <div>${t("workflows_workflow")}</div>
         <div>
           <select id="wf-select">${options}</select>
         </div>
-        <div>Output Dir</div>
+        <div>${t("workflows_output_dir")}</div>
         <div><input id="wf-out" value="out/ui" /></div>
-        <div>Inputs</div>
+        <div>${t("workflows_inputs")}</div>
         <div id="wf-form"></div>
       </div>
       <div class="progress">
         <div class="progress-bar" id="wf-progress"></div>
       </div>
-      <div class="small" id="wf-progress-text">Idle</div>
+      <div class="small" id="wf-progress-text">${t("workflows_idle")}</div>
       <div class="row">
-        <button class="btn" id="wf-run">Run</button>
-        <button class="btn secondary" id="wf-replay">Replay</button>
+        <button class="btn" id="wf-run">${t("workflows_run")}</button>
+        <button class="btn secondary" id="wf-replay">${t("workflows_replay")}</button>
       </div>
       <pre id="wf-output"></pre>
     </div>
@@ -79,9 +270,9 @@ async function loadWorkflows() {
         <div class="card">
           <div class="card-title">${wf.name}</div>
           <div class="kv">
-            <div>Version</div><div>${wf.version}</div>
-            <div>Path</div><div>${wf.path}</div>
-            <div>Steps</div><div>${wf.steps}</div>
+            <div>${t("overview_version")}</div><div>${wf.version}</div>
+            <div>${t("common_path")}</div><div>${wf.path}</div>
+            <div>${t("common_steps")}</div><div>${wf.steps}</div>
           </div>
         </div>
       `
@@ -100,6 +291,7 @@ async function loadWorkflows() {
 
   let currentWorkflow: any | null = null;
   let currentStepStartTs: number | null = null;
+  let pickerBound = false;
 
   function assignNested(target: Record<string, any>, path: string, value: any) {
     const parts = path.split(".");
@@ -150,7 +342,9 @@ async function loadWorkflows() {
   function setProgress(done: number, total: number, status?: string) {
     const pct = total ? Math.min(100, Math.round((done / total) * 100)) : 0;
     progressEl.style.width = `${pct}%`;
-    progressText.textContent = total ? `Progress: ${done}/${total} ${status || ""}` : "Idle";
+    progressText.textContent = total
+      ? t("workflows_progress", { done, total, status: status || "" })
+      : t("workflows_idle");
   }
 
   function collectRequiredPaths(schema: any, path = ""): Set<string> {
@@ -183,7 +377,7 @@ async function loadWorkflows() {
           renderInputFromSchema(prop as any, path ? `${path}.${key}` : key, defaults, requiredPaths)
         )
         .join("");
-      const title = path ? path : "Inputs";
+      const title = path ? path : t("workflows_inputs");
       return `
         <div class="fieldset">
           <div class="fieldset-title">${title}</div>
@@ -195,7 +389,10 @@ async function loadWorkflows() {
     const label = schema.title || path;
     const desc = schema.description ? `<div class="small">${schema.description}</div>` : "";
     const def = defaults[path] ?? schema.default ?? "";
-    const defHint = schema.default !== undefined ? `<div class="small">default: ${schema.default}</div>` : "";
+    const defHint =
+      schema.default !== undefined
+        ? `<div class="small">${t("common_default")}: ${schema.default}</div>`
+        : "";
     const isRequired = requiredPaths.has(path);
     const requiredMark = isRequired ? `<span class="req">*</span>` : "";
     const rangeAttrs = [
@@ -208,7 +405,7 @@ async function loadWorkflows() {
       if (typeof schema.patternMessage === "string") {
         patternMessage = schema.patternMessage;
       } else if (typeof schema.patternMessage === "object") {
-        const lang = (navigator.language || "en").toLowerCase();
+        const lang = currentLang.toLowerCase();
         patternMessage =
           schema.patternMessage[lang] ||
           schema.patternMessage[lang.split("-")[0]] ||
@@ -259,7 +456,7 @@ async function loadWorkflows() {
     const isFile = schema.format === "path" || schema.format === "file";
     const isDir = schema.format === "directory";
     const picker = isFile || isDir
-      ? `<button class="btn secondary small" data-picker="${path}">Browse</button>`
+      ? `<button class="btn secondary small" data-picker="${path}">${t("workflows_browse")}</button>`
       : "";
     const formatAttr = isDir ? "data-format=\"directory\"" : isFile ? "data-format=\"file\"" : "";
     return `
@@ -310,21 +507,43 @@ async function loadWorkflows() {
       formEl.innerHTML = renderInputFromSchema(schema, "", inputs, requiredPaths);
     } else {
       const rows = Object.entries(inputs).map(([k, v]) => renderInputRow(k, v));
-      formEl.innerHTML = rows.join("") || `<div class="small">No inputs defined</div>`;
+      formEl.innerHTML = rows.join("") || `<div class="small">${t("workflows_no_inputs")}</div>`;
     }
-    setProgress(0, detail?.steps || 0, "Idle");
+    setProgress(0, detail?.steps || 0, t("workflows_idle"));
 
-    formEl.querySelectorAll<HTMLButtonElement>("[data-picker]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
+    if (!pickerBound) {
+      formEl.addEventListener("click", async (evt) => {
+        const target = evt.target as HTMLElement | null;
+        const btn = target?.closest<HTMLButtonElement>("[data-picker]");
+        if (!btn) return;
         const key = btn.dataset.picker as string;
         const input = formEl.querySelector<HTMLInputElement>(`[data-key=\"${key}\"]`);
         const isDir = input?.dataset.format === "directory";
-        const selected = await open({ multiple: false, directory: isDir });
-        if (selected) {
-          if (input) input.value = String(selected);
+        outputEl.textContent = t("dialog_opening");
+        try {
+          const selected = await open({ multiple: false, directory: isDir });
+          const picked = Array.isArray(selected) ? selected[0] : selected;
+          if (picked) {
+            let value = String(picked);
+            if (value.startsWith("file://")) {
+              try {
+                value = decodeURIComponent(value.replace("file://", ""));
+              } catch {
+                value = value.replace("file://", "");
+              }
+            }
+            if (input) input.value = value;
+          }
+        } catch (err) {
+          const msg = err ? String(err) : "";
+          const hint = msg.includes("not available") || msg.includes("tauri")
+            ? t("dialog_unavailable")
+            : t("dialog_failed", { message: msg });
+          alert(hint);
         }
       });
-    });
+      pickerBound = true;
+    }
 
     formEl.querySelectorAll<HTMLInputElement>("[data-pattern]").forEach((input) => {
       const pattern = input.dataset.pattern;
@@ -356,14 +575,15 @@ async function loadWorkflows() {
         currentStepStartTs = null;
       }
       const elapsed = currentStepStartTs ? ` • ${Math.max(0, Date.now() - currentStepStartTs)} ms` : "";
-      const status = last ? `(last: ${last.type}${last.step_id ? ` / ${last.step_id}` : ""})${elapsed}` : "";
+      const stepSuffix = last?.step_id ? ` / ${last.step_id}` : "";
+      const status = last ? t("workflows_status_last", { type: last.type, step: stepSuffix, elapsed }) : "";
       setProgress(completed, totalSteps, status);
       await new Promise((r) => setTimeout(r, 700));
     }
   }
 
   runBtn.addEventListener("click", async () => {
-    outputEl.textContent = "Running...";
+    outputEl.textContent = t("workflows_running");
     const inputs = flattenFormValues(formEl);
     const totalSteps = currentWorkflow?.steps || 0;
     const stopSignal = { stop: false };
@@ -374,18 +594,18 @@ async function loadWorkflows() {
       inputsJson: JSON.stringify(inputs)
     });
     stopSignal.stop = true;
-    outputEl.textContent = `${res.success ? "OK" : "FAILED"}\n${res.stdout}\n${res.stderr}`;
+    outputEl.textContent = `${res.success ? t("workflows_ok") : t("workflows_failed")}\n${res.stdout}\n${res.stderr}`;
     await loadRuns();
   });
 
   replayBtn.addEventListener("click", async () => {
-    outputEl.textContent = "Replaying...";
+    outputEl.textContent = t("workflows_replaying");
     const totalSteps = currentWorkflow?.steps || 0;
     const stopSignal = { stop: false };
     pollEvents(outEl.value, totalSteps, stopSignal);
     const res = await invoke<any>("replay_run", { outDir: outEl.value });
     stopSignal.stop = true;
-    outputEl.textContent = `${res.success ? "OK" : "FAILED"}\n${res.stdout}\n${res.stderr}`;
+    outputEl.textContent = `${res.success ? t("workflows_ok") : t("workflows_failed")}\n${res.stdout}\n${res.stderr}`;
     await loadRuns();
   });
 }
@@ -394,21 +614,21 @@ async function loadRuns() {
   const list = await invoke<any[]>("list_runs");
   const el = contents.get("runs")!;
   if (!list.length) {
-    el.innerHTML = `<div class="card"><div class="card-title">No runs yet</div><div class="small">Run any workflow to see audit logs.</div></div>`;
+    el.innerHTML = `<div class="card"><div class="card-title">${t("runs_no_runs")}</div><div class="small">${t("runs_no_runs_hint")}</div></div>`;
     return;
   }
   const options = list.map((r) => `<option value="${r.dir}">${r.workflow}</option>`).join("");
   el.innerHTML = `
     <div class="card">
-      <div class="card-title">Events Timeline</div>
+      <div class="card-title">${t("runs_events_timeline")}</div>
       <div class="row">
         <select id="run-select">${options}</select>
-        <button class="btn" id="run-load">Load Events</button>
+        <button class="btn" id="run-load">${t("runs_load_events")}</button>
       </div>
       <div class="row">
-        <input id="run-search" placeholder="Search events..." />
+        <input id="run-search" placeholder="${t("runs_search_events")}" />
         <select id="event-type">
-          <option value="">All types</option>
+          <option value="">${t("runs_all_types")}</option>
           <option value="step_start">step_start</option>
           <option value="tool_call">tool_call</option>
           <option value="tool_result">tool_result</option>
@@ -420,33 +640,33 @@ async function loadRuns() {
           <option value="5000">5s</option>
           <option value="60000">1m</option>
           <option value="300000">5m</option>
-          <option value="custom">Custom</option>
+          <option value="custom">${t("runs_custom")}</option>
         </select>
         <input id="time-custom" type="number" min="1000" step="1000" value="5000" />
       </div>
       <div class="row">
-        <button class="btn secondary" id="export-svg">Export SVG</button>
-        <button class="btn secondary" id="export-png">Export PNG</button>
+        <button class="btn secondary" id="export-svg">${t("runs_export_svg")}</button>
+        <button class="btn secondary" id="export-png">${t("runs_export_png")}</button>
       </div>
       <div id="stats"></div>
       <div id="events"></div>
     </div>
     <div class="card">
-      <div class="card-title">Export Report</div>
+      <div class="card-title">${t("runs_export_report")}</div>
       <div class="row">
         <input id="report-path" value="out/report.json" />
         <select id="report-format">
           <option value="json">json</option>
           <option value="html">html</option>
         </select>
-        <button class="btn" id="report-export">Export</button>
+        <button class="btn" id="report-export">${t("runs_export")}</button>
       </div>
       <pre id="report-output"></pre>
     </div>
     <div class="card">
-      <div class="card-title">Run Filter</div>
+      <div class="card-title">${t("runs_filter")}</div>
       <div class="row">
-        <input id="runs-filter" placeholder="Filter by workflow/run id" />
+        <input id="runs-filter" placeholder="${t("runs_filter_placeholder")}" />
       </div>
     </div>
     ${list
@@ -455,11 +675,11 @@ async function loadRuns() {
         <div class="card">
           <div class="card-title">${run.workflow}</div>
           <div class="kv">
-            <div>Run ID</div><div>${run.run_id}</div>
-            <div>Dir</div><div>${run.dir}</div>
-            <div>Replay</div><div>${run.replay}</div>
+            <div>${t("runs_run_id")}</div><div>${run.run_id}</div>
+            <div>${t("runs_dir")}</div><div>${run.dir}</div>
+            <div>${t("runs_replay")}</div><div>${run.replay}</div>
           </div>
-          <div class="small">Events: ${run.events_path || "(missing)"}</div>
+          <div class="small">${t("runs_events")}: ${run.events_path || t("runs_missing")}</div>
         </div>
       `
       )
@@ -486,7 +706,7 @@ async function loadRuns() {
   function groupByStep(events: any[]) {
     const groups: Record<string, any[]> = {};
     events.forEach((e) => {
-      const key = e.step_id || "(no-step)";
+      const key = e.step_id || t("runs_no_step");
       if (!groups[key]) groups[key] = [];
       groups[key].push(e);
     });
@@ -513,9 +733,9 @@ async function loadRuns() {
     const typeCounts: Record<string, number> = {};
     const stepCounts: Record<string, number> = {};
     events.forEach((e) => {
-      const t = e.type || "event";
-      typeCounts[t] = (typeCounts[t] || 0) + 1;
-      const s = e.step_id || "(no-step)";
+      const typeName = e.type || "event";
+      typeCounts[typeName] = (typeCounts[typeName] || 0) + 1;
+      const s = e.step_id || t("runs_no_step");
       stepCounts[s] = (stepCounts[s] || 0) + 1;
     });
     const renderBars = (data: Record<string, number>) => {
@@ -540,9 +760,9 @@ async function loadRuns() {
       const buckets: Record<string, number> = {};
       events.forEach((e) => {
         if (!e.ts) return;
-        const t = Date.parse(e.ts);
-        if (Number.isNaN(t)) return;
-        const bucket = Math.floor(t / windowMs) * windowMs;
+        const ts = Date.parse(e.ts);
+        if (Number.isNaN(ts)) return;
+        const bucket = Math.floor(ts / windowMs) * windowMs;
         buckets[bucket] = (buckets[bucket] || 0) + 1;
       });
       const keys = Object.keys(buckets).map(Number).sort((a, b) => a - b);
@@ -569,15 +789,15 @@ async function loadRuns() {
 
     statsEl.innerHTML = `
       <div class="card">
-        <div class="card-title">Event Type Counts</div>
+        <div class="card-title">${t("runs_event_type_counts")}</div>
         ${renderBars(typeCounts)}
       </div>
       <div class="card">
-        <div class="card-title">Event Timeline</div>
+        <div class="card-title">${t("runs_event_timeline")}</div>
         ${renderTimeline()}
       </div>
       <div class="card">
-        <div class="card-title">Step Event Counts</div>
+        <div class="card-title">${t("runs_step_event_counts")}</div>
         ${renderBars(stepCounts)}
       </div>
     `;
@@ -587,7 +807,7 @@ async function loadRuns() {
     const events = await invoke<any[]>("get_events", { runDir: runSelect.value });
     lastEvents = events;
     if (!events.length) {
-      eventsEl.innerHTML = `<div class="small">No events found.</div>`;
+      eventsEl.innerHTML = `<div class="small">${t("runs_no_events")}</div>`;
       return;
     }
     const q = runSearch.value.trim().toLowerCase();
@@ -607,7 +827,7 @@ async function loadRuns() {
           .map(
             (e) => `
           <div class="timeline-item">
-            <div class="small">${e.ts || "-"} • ${e.type || "event"} ${e.tool ? `• ${e.tool}` : ""}</div>
+            <div class="small">${e.ts || "-"} • ${e.type || t("runs_event")} ${e.tool ? `• ${e.tool}` : ""}</div>
             <pre>${JSON.stringify(e, null, 2)}</pre>
           </div>
         `
@@ -615,7 +835,7 @@ async function loadRuns() {
           .join("");
         return `
         <details class="card" open>
-          <summary class="card-title">${header} <span class="small">(${es.length} events)</span></summary>
+          <summary class="card-title">${header} <span class="small">(${t("runs_events_count", { count: es.length })})</span></summary>
           ${items}
         </details>
       `;
@@ -670,7 +890,7 @@ async function loadRuns() {
         <foreignObject x="0" y="0" width="960" height="540">
           <div xmlns="http://www.w3.org/1999/xhtml" style="padding:16px;">
             ${style}
-            <h2>Event Stats</h2>
+            <h2>${t("runs_event_stats")}</h2>
             ${statsEl.innerHTML}
           </div>
         </foreignObject>
@@ -702,7 +922,7 @@ async function loadRuns() {
         <foreignObject x="0" y="0" width="960" height="540">
           <div xmlns="http://www.w3.org/1999/xhtml" style="padding:16px;">
             ${style}
-            <h2>Event Stats</h2>
+            <h2>${t("runs_event_stats")}</h2>
             ${statsEl.innerHTML}
           </div>
         </foreignObject>
@@ -740,7 +960,7 @@ function loadArchitecture() {
   const el = contents.get("architecture")!;
   el.innerHTML = `
     <div class="card">
-      <div class="card-title">Layered Architecture</div>
+      <div class="card-title">${t("architecture_layered")}</div>
       <svg class="graph" viewBox="0 0 960 420" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
@@ -748,22 +968,22 @@ function loadArchitecture() {
           </marker>
         </defs>
         <rect x="40" y="40" width="200" height="60" rx="12" class="node" />
-        <text x="140" y="76" text-anchor="middle" class="label">UI (Desktop)</text>
+        <text x="140" y="76" text-anchor="middle" class="label">${t("architecture_ui")}</text>
 
         <rect x="280" y="40" width="200" height="60" rx="12" class="node" />
-        <text x="380" y="76" text-anchor="middle" class="label">App Service</text>
+        <text x="380" y="76" text-anchor="middle" class="label">${t("architecture_app_service")}</text>
 
         <rect x="520" y="40" width="200" height="60" rx="12" class="node" />
-        <text x="620" y="76" text-anchor="middle" class="label">Orchestrator</text>
+        <text x="620" y="76" text-anchor="middle" class="label">${t("architecture_orchestrator")}</text>
 
         <rect x="760" y="40" width="180" height="60" rx="12" class="node" />
-        <text x="850" y="76" text-anchor="middle" class="label">LLM Gateway</text>
+        <text x="850" y="76" text-anchor="middle" class="label">${t("architecture_llm_gateway")}</text>
 
         <rect x="520" y="160" width="200" height="60" rx="12" class="node" />
-        <text x="620" y="196" text-anchor="middle" class="label">Tools Runtime</text>
+        <text x="620" y="196" text-anchor="middle" class="label">${t("architecture_tools_runtime")}</text>
 
         <rect x="520" y="280" width="200" height="60" rx="12" class="node" />
-        <text x="620" y="316" text-anchor="middle" class="label">Local Data</text>
+        <text x="620" y="316" text-anchor="middle" class="label">${t("architecture_local_data")}</text>
 
         <line x1="240" y1="70" x2="280" y2="70" class="edge" marker-end="url(#arrow)" />
         <line x1="480" y1="70" x2="520" y2="70" class="edge" marker-end="url(#arrow)" />
@@ -771,16 +991,29 @@ function loadArchitecture() {
         <line x1="620" y1="100" x2="620" y2="160" class="edge" marker-end="url(#arrow)" />
         <line x1="620" y1="220" x2="620" y2="280" class="edge" marker-end="url(#arrow)" />
       </svg>
-      <div class="small">Planner 负责决策与计划；Tools 负责确定性执行与审计。</div>
+      <div class="small">${t("architecture_note")}</div>
     </div>
     <div class="card">
-      <div class="card-title">Execution Contracts</div>
-      <div class="small">每个 Tool 有严格的 JSON Schema 输入输出，运行事件写入 events.jsonl，可回放。</div>
+      <div class="card-title">${t("architecture_contracts")}</div>
+      <div class="small">${t("architecture_contracts_note")}</div>
     </div>
   `;
 }
 
 async function init() {
+  const langSelect = document.getElementById("lang-select") as HTMLSelectElement | null;
+  if (langSelect) {
+    langSelect.value = currentLang;
+    langSelect.addEventListener("change", async () => {
+      setLang((langSelect.value as Lang) || "zh");
+      await loadOverview();
+      await loadWorkflows();
+      await loadRuns();
+      loadArchitecture();
+      setActive(activeTab);
+    });
+  }
+  updateStaticText();
   setActive("overview");
   await loadOverview();
   await loadWorkflows();
@@ -790,5 +1023,5 @@ async function init() {
 
 init().catch((err) => {
   const el = contents.get("overview")!;
-  el.innerHTML = `<div class="card">Error: ${String(err)}</div>`;
+  el.innerHTML = `<div class="card">${t("general_error", { message: String(err) })}</div>`;
 });

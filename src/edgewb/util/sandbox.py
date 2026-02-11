@@ -17,6 +17,7 @@ class PathSandbox:
             workspace_root / "out",
             workspace_root / "data",
             workspace_root,
+            Path.home(),
         )
         return PathSandbox(tuple(r.resolve() for r in roots))
 
@@ -29,6 +30,7 @@ class PathSandbox:
             workspace_root / "out",
             ctx.out_dir,
             workspace_root,
+            Path.home(),
         )
         return PathSandbox(tuple(r.resolve() for r in roots))
 
